@@ -1,10 +1,3 @@
-//
-//  Binding.swift
-//  ABZ.agency
-//
-//  Created by pfriedrix on 07.08.2024.
-//
-
 import SwiftUI
 
 extension Store {

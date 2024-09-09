@@ -1,31 +1,63 @@
-//
-//  Store.swift
-//  ABZ.agency
-//
-//  Created by pfriedrix on 07.08.2024.
-//
-
 import Foundation
 
-final public class Store<S: Reducer>: ObservableObject {
-    public typealias State = S.State
-    public typealias Action = S.Action
+/// A class responsible for managing the application's state and dispatching actions.
+///
+/// The `Store` class holds the application's state and provides a mechanism to dispatch
+/// actions, which are handled by the associated reducer. The reducer updates the state
+/// based on the action, and the store publishes the new state to any observing views or objects.
+///
+/// This class also handles asynchronous state updates and supports side effects through the
+/// reducer's `Effect` mechanism.
+///
+/// - Parameters:
+///   - R: The type of the reducer, which conforms to the `Reducer` protocol and defines
+///        the state's structure and how actions are handled.
+final public class Store<R: Reducer>: ObservableObject {
     
+    /// The type representing the current state of the store.
+    public typealias State = R.State
+    
+    /// The type representing the actions handled by the store.
+    public typealias Action = R.Action
+    
+    /// The current state of the store, published to observers.
     @Published public internal(set) var state: State
     
-    internal let reducer: S
+    /// The reducer responsible for handling actions and updating the state.
+    internal let reducer: R
     
-    public required init(initial: State, reducer: S) {
+    /// Initializes the store with an initial state and a reducer.
+    ///
+    /// - Parameters:
+    ///   - initial: The initial state of the store.
+    ///   - reducer: The reducer that will handle actions and state updates.
+    public required init(initial: State, reducer: R) {
         self.state = initial
         self.reducer = reducer
     }
     
+    /// Dispatches an action to the store, triggering a state update.
+    ///
+    /// The action is sent to the reducer, which processes it and returns an effect that
+    /// may update the state and/or trigger additional actions. The state is then updated
+    /// on the main thread.
+    ///
+    /// - Parameter action: The action to dispatch to the reducer.
     public func dispatch(_ action: Action) {
         Task { @MainActor in
             await dispatch(state, action)
         }
     }
     
+    /// A private function that handles the dispatching of actions and state updates asynchronously.
+    ///
+    /// This function invokes the reducer to process the action and returns an effect. If the effect
+    /// includes a new action, the method recursively dispatches the action until no further actions
+    /// are returned.
+    ///
+    /// - Parameters:
+    ///   - currentState: The current state before the action is applied.
+    ///   - action: The action to process and apply to the state.
     @MainActor
     private func dispatch(_ currentState: State, _ action: Action) async {
         let effect = await reducer.reduce(into: currentState, action: action)
