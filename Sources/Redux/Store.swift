@@ -15,8 +15,7 @@ final public class Store<S: Reducer>: ObservableObject {
     
     internal let reducer: S
     
-    public required init(initial: State,
-                  reducer: S) {
+    public required init(initial: State, reducer: S) {
         self.state = initial
         self.reducer = reducer
     }
@@ -38,5 +37,11 @@ final public class Store<S: Reducer>: ObservableObject {
         if let action = effect.action {
             await dispatch(effect.state, action)
         }
+    }
+}
+
+extension Store {
+    public subscript<Value>(dynamicMember keyPath: KeyPath<State, Value>) -> Value {
+        state[keyPath: keyPath]
     }
 }
