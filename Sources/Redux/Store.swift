@@ -39,9 +39,3 @@ final public class Store<S: Reducer>: ObservableObject {
         }
     }
 }
-
-extension Store {
-    public subscript<Value>(dynamicMember keyPath: KeyPath<State, Value>) -> Value {
-        state[keyPath: keyPath]
-    }
-}
