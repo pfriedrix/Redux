@@ -10,7 +10,13 @@
 /// - Parameters:
 ///   - State: The type representing the state managed by the reducer.
 ///   - Action: The type representing the actions handled by the reducer.
-public protocol Reducer<State, Action>: Storable {
+public protocol Reducer<State, Action> {
+    
+    /// The type of state being stored.
+    associatedtype State
+    
+    /// The type of action that may trigger state transitions.
+    associatedtype Action
     
     /// Reduces the current state by applying the given action.
     ///
@@ -21,5 +27,5 @@ public protocol Reducer<State, Action>: Storable {
     ///   - state: The current state of the application, which will be modified by the action.
     ///   - action: The action to apply to the state.
     /// - Returns: An effect that may trigger further state updates or actions.
-    @MainActor func reduce(into state: State, action: Action) async -> Effect<State, Action>
+    @MainActor func reduce(into state: inout State, action: Action) -> Effect<Action>
 }

@@ -6,7 +6,10 @@ import PackageDescription
 let package = Package(
     name: "Redux",
     platforms: [
-        .iOS(.v15)
+        .iOS(.v15),
+        .macOS(.v12),
+        .watchOS(.v8),
+        .tvOS(.v15)
     ],
     products: [
         .library(
@@ -15,6 +18,12 @@ let package = Package(
     ],
     targets: [
         .target(
-            name: "Redux")
+            name: "Redux"),
+        .testTarget(
+            name: "Tests",
+            dependencies: [
+                "Redux"
+            ]
+        )
     ]
 )

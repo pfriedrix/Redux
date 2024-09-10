@@ -9,37 +9,64 @@
 /// - Parameters:
 ///   - State: The state associated with the effect.
 ///   - Action: An optional action that might be triggered as a result of the state.
-public struct Effect<State, Action> {
+public struct Effect<Action> {
     
-    /// The current state of the effect.
-    let state: State
-    
-    /// The action that might be triggered, if any.
-    let action: Action?
-    
-    /// Initializes an effect with both state and an optional action.
-    ///
-    /// This initializer allows creating an effect that holds both a state and an
-    /// optional action. The action may trigger side effects or additional behavior
-    /// in the state management system.
-    ///
-    /// - Parameters:
-    ///   - state: The state associated with the effect.
-    ///   - action: The action that may be triggered, if any.
-    public init(state: State, action: Action?) {
-        self.state = state
-        self.action = action
+    enum Operation {
+        case none
+        case send(Action)
+        case run(TaskPriority? = nil, @Sendable (_ send: Send<Action>) async -> Void)
     }
     
-    /// Initializes an effect with a state but without any action.
-    ///
-    /// This initializer creates an effect with only the state, without any
-    /// associated action. This is useful when no immediate action is needed,
-    /// and only the state is required.
-    ///
-    /// - Parameter state: The state associated with the effect.
-    public init(state: State) {
-        self.state = state
-        self.action = nil
+    let operation: Operation
+}
+
+extension Effect {
+    public static var none: Self {
+        return Self(operation: .none)
+    }
+    
+    public static func run(priority: TaskPriority? = nil,
+                           operation: @escaping @Sendable (_ send: Send<Action>) async throws -> Void,
+                           catch handler: (@Sendable (_ error: Error, _ send: Send<Action>) async -> Void)? = nil) -> Self {
+        Self(operation: .run(priority) { send in
+            do {
+                try await operation(send)
+            } catch {
+                guard let handler = handler else { return }
+                await handler(error, send)
+            }
+        })
+    }
+    
+    public static func send(_ action: Action) -> Self {
+        Self(operation: .send(action))
+     }
+}
+
+extension Effect.Operation: Equatable {
+    static func == (lhs: Effect.Operation, rhs: Effect.Operation) -> Bool {
+        switch (lhs, rhs) {
+        case (.none, .none):
+            return true
+        case (.run(let lhsPriority, _), .run(let rhsPriority, _)):
+            return lhsPriority == rhsPriority
+        default:
+            return false
+        }
     }
 }
+
+@MainActor
+public struct Send<Action>: Sendable {
+    let send: @MainActor @Sendable (Action) -> Void
+    
+    public init(send: @escaping @MainActor @Sendable (Action) -> Void) {
+        self.send = send
+    }
+    
+    public func callAsFunction(_ action: Action) {
+        guard !Task.isCancelled else { return }
+        self.send(action)
+    }
+}
+
