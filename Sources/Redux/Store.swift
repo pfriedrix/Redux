@@ -1,5 +1,3 @@
-import Foundation
-
 /// A class responsible for managing the application's state and dispatching actions.
 ///
 /// The `Store` class holds the application's state and provides a mechanism to dispatch
@@ -12,7 +10,7 @@ import Foundation
 /// - Parameters:
 ///   - R: The type of the reducer, which conforms to the `Reducer` protocol and defines
 ///        the state's structure and how actions are handled.
-final public class Store<R: Reducer>: ObservableObject {
+final public class Store<R: Reducer> {
     
     /// The type representing the current state of the store.
     public typealias State = R.State
@@ -21,7 +19,7 @@ final public class Store<R: Reducer>: ObservableObject {
     public typealias Action = R.Action
     
     /// The current state of the store, published to observers.
-    @Published public internal(set) var state: State
+    public internal(set) var state: State
     
     /// The reducer responsible for handling actions and updating the state.
     internal let reducer: R
@@ -43,10 +41,9 @@ final public class Store<R: Reducer>: ObservableObject {
     /// on the main thread.
     ///
     /// - Parameter action: The action to dispatch to the reducer.
+    @MainActor
     public func dispatch(_ action: Action) {
-        Task { @MainActor in
-            await dispatch(state, action)
-        }
+        dispatch(state, action)
     }
     
     /// A private function that handles the dispatching of actions and state updates asynchronously.
@@ -59,15 +56,22 @@ final public class Store<R: Reducer>: ObservableObject {
     ///   - currentState: The current state before the action is applied.
     ///   - action: The action to process and apply to the state.
     @MainActor
-    private func dispatch(_ currentState: State, _ action: Action) async {
-        let effect = await reducer.reduce(into: currentState, action: action)
+    internal func dispatch(_ state: State, _ action: Action) {
+        var currentState = state
+        let effect = reducer.reduce(into: &currentState, action: action)
         
-        DispatchQueue.main.async {
-            self.state = effect.state
-        }
+        self.state = currentState
         
-        if let action = effect.action {
-            await dispatch(effect.state, action)
+        switch effect.operation {
+        case .none: return
+        case let .send(action):
+            dispatch(action)
+        case let .run(priority, operation):
+            Task(priority: priority) { [ weak self ] in
+                await operation(Send { action in
+                    self?.dispatch(action)
+                })
+            }
         }
     }
 }
