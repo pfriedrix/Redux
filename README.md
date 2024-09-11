@@ -33,8 +33,6 @@ To install this package using Swift Package Manager (SPM):
 5. Select the package and choose the version you want to install.
 6. Click `Add Package`.
 
-This will integrate the package into your project, allowing you to begin managing state using the Redux architecture in Swift.
-
 ## Architecture Overview
 
 The architecture follows a unidirectional data flow, which makes the app's state predictable and easy to debug. The main components are:
