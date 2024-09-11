@@ -57,6 +57,7 @@ extension Store where State: Storable {
     @MainActor
     public func dispatch(_ action: Action) {
         dispatch(state, action)
+        objectWillChange.send()
     }
     
     /// Handles the core logic for dispatching an action, reducing the state, and processing effects.

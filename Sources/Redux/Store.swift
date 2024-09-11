@@ -1,3 +1,4 @@
+import Foundation
 /// A class responsible for managing the application's state and dispatching actions.
 ///
 /// The `Store` class holds the application's state and provides a mechanism to dispatch
@@ -10,7 +11,7 @@
 /// - Parameters:
 ///   - R: The type of the reducer, which conforms to the `Reducer` protocol and defines
 ///        the state's structure and how actions are handled.
-final public class Store<R: Reducer> {
+final public class Store<R: Reducer>: ObservableObject {
     
     /// The type representing the current state of the store.
     public typealias State = R.State
@@ -44,6 +45,7 @@ final public class Store<R: Reducer> {
     @MainActor
     public func dispatch(_ action: Action) {
         dispatch(state, action)
+        objectWillChange.send()
     }
     
     /// A private function that handles the dispatching of actions and state updates asynchronously.
