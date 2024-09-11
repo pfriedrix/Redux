@@ -366,11 +366,7 @@ final class SideEffectReducer: Reducer {
     func reduce(into state: inout State, action: Action) -> Effect<Action> {
         switch action {
         case .fetchData:
-            return .run { send in
-                // Симуляція асинхронного запиту
-                try await Task.sleep(nanoseconds: 300_000_000) // 0.3 секунди
-                await send(.updateData("Fetched Data"))
-            }
+            return .send(.updateData("Update Data"))
         case .updateData(let newData):
             state.data = newData
             return .none
@@ -392,7 +388,7 @@ final class RollbackReducer: Reducer {
         case .incrementWithCondition(let shouldRollback):
             state.count += 1
             if shouldRollback {
-                state.count -= 1 // Відкат
+                state.count -= 1
             }
             return .none
         }
