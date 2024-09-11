@@ -34,9 +34,15 @@ extension Store where State: Storable {
     ///   - reducer: The reducer that handles state updates and actions.
     ///   - defaultState: The default state to use if no saved state is found.
     public convenience init(reducer: R, defaultState: State) {
-        let restoredState = Self.restore() ?? defaultState
-        self.init(initial: restoredState, reducer: reducer)
-        state.save()
+        let restoredState = Self.restore()
+        self.init(initial: restoredState ?? defaultState , reducer: reducer)
+        
+        if restoredState == nil {
+            logger.info("State restored from storage: \(state)")
+            state.save()
+        } else {
+            logger.info("State default used: \(state)")
+        }
     }
     
     /// Restores the saved state from persistent storage.
@@ -58,6 +64,8 @@ extension Store where State: Storable {
     /// - Parameter action: The action to be dispatched to the reducer for processing.
     @MainActor
     public func dispatch(_ action: Action) {
+        logger.debug("Dispatching action: \(action)")
+        
         dispatch(state, action)
         objectWillChange.send()
     }
@@ -75,6 +83,8 @@ extension Store where State: Storable {
     internal func dispatch(_ state: State, _ action: Action) {
         var currentState = state
         let effect = reducer.reduce(into: &currentState, action: action)
+        
+        logger.info("New state after action \(action): \(currentState)")
         
         self.state = currentState
         self.state.save()

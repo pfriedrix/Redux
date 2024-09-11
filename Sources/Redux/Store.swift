@@ -25,6 +25,8 @@ final public class Store<R: Reducer>: ObservableObject {
     /// The reducer responsible for handling actions and updating the state.
     internal let reducer: R
     
+    internal let logger = Logger.shared
+    
     /// Initializes the store with an initial state and a reducer.
     ///
     /// - Parameters:
@@ -33,6 +35,7 @@ final public class Store<R: Reducer>: ObservableObject {
     public required init(initial: State, reducer: R) {
         self.state = initial
         self.reducer = reducer
+        logger.info("Store initialized with state: \(state)")
     }
     
     /// Dispatches an action to the store, triggering a state update.
@@ -44,6 +47,8 @@ final public class Store<R: Reducer>: ObservableObject {
     /// - Parameter action: The action to dispatch to the reducer.
     @MainActor
     public func dispatch(_ action: Action) {
+        logger.debug("Dispatching action: \(action)")
+        
         dispatch(state, action)
         objectWillChange.send()
     }
@@ -61,6 +66,8 @@ final public class Store<R: Reducer>: ObservableObject {
     internal func dispatch(_ state: State, _ action: Action) {
         var currentState = state
         let effect = reducer.reduce(into: &currentState, action: action)
+        
+        logger.info("New state after action \(action): \(currentState)")
         
         self.state = currentState
         
