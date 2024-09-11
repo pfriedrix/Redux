@@ -19,7 +19,7 @@ final public class Store<R: Reducer>: ObservableObject {
     /// The type representing the actions handled by the store.
     public typealias Action = R.Action
     
-    /// The current state of the store, published to observers.
+    /// The current state of the store
     public internal(set) var state: State
     
     /// The reducer responsible for handling actions and updating the state.

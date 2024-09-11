@@ -150,7 +150,7 @@ final class StoreTests: XCTestCase {
         waitForStateChange(timeout: 1.0) {
             self.store.state.count == 1 && self.store.state.message == "Updated Message"
         }
-        
+
         XCTAssertEqual(store.state.count, 1)
         XCTAssertEqual(store.state.message, "Updated Message")
     }

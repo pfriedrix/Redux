@@ -1,3 +1,5 @@
+import Foundation
+
 public protocol Storable {
     
     /// Saves the current state to persistent storage.
@@ -87,6 +89,38 @@ extension Store where State: Storable {
                     self?.dispatch(action)
                 })
             }
+        }
+    }
+}
+
+extension Storable where Self: Codable {
+    
+    /// Saves the current state to UserDefaults.
+    ///
+    /// - Parameter key: The key under which the state will be saved.
+    public func save(forKey key: String) {
+        let encoder = JSONEncoder()
+        do {
+            let data = try encoder.encode(self)
+            UserDefaults.standard.set(data, forKey: key)
+        } catch {
+            print("Failed to save state: \(error)")
+        }
+    }
+    
+    /// Loads the state from UserDefaults.
+    ///
+    /// - Parameter key: The key under which the state is stored.
+    /// - Returns: The loaded state, or `nil` if no valid state is found.
+    public static func load(fromKey key: String) -> Self? {
+        guard let data = UserDefaults.standard.data(forKey: key) else { return nil }
+        let decoder = JSONDecoder()
+        do {
+            let state = try decoder.decode(Self.self, from: data)
+            return state
+        } catch {
+            print("Failed to load state: \(error)")
+            return nil
         }
     }
 }
