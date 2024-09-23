@@ -1,6 +1,6 @@
 import os
 
-final class Logger {
+final public class Logger {
     public static let shared = Logger()
     public static var logLevel: OSLogType = .debug
     
