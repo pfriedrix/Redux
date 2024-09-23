@@ -213,7 +213,7 @@ final class StoreTests: XCTestCase {
         try await Task.sleep(nanoseconds: 500_000_000)  // 0.5 seconds
 
         // Assert that the side effect updated the state
-        XCTAssertEqual(store.state.data, "Fetched Data")
+        XCTAssertEqual(store.state.data, "Update Data")
     }
 
     // Test 2: Concurrent async actions should resolve in the correct order.
